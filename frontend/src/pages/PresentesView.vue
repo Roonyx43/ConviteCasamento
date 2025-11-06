@@ -52,7 +52,6 @@ async function confirmarContribuicao({ nome, amount }) {
 
 <template>
   <div class="space-y-4">
-    <h2 class="text-2xl font-bold">Escolha um presente e contribua</h2>
 
     <div v-if="carregando" class="text-gray-500">Carregando…</div>
 

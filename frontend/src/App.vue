@@ -1,14 +1,27 @@
 <template>
-  <div class="min-h-screen bg-gray-50 text-gray-800">
-    <header class="p-4 border-b bg-white">
-      <div class="max-w-4xl mx-auto flex items-center justify-between">
-        <h1 class="text-xl font-bold">Lista de Presentes</h1>
-        <nav class="text-sm">
-          <RouterLink to="/" class="hover:underline">Presentes</RouterLink>
-        </nav>
+  <div class="min-h-screen text-gray-800 relative overflow-hidden">
+    <!-- Fundo de imagem (bem atrás) -->
+    <div class="absolute inset-0 -z-20" style="
+        background: url('/fundo.png') center/cover no-repeat;
+        filter: brightness(1.05) contrast(0.95);
+      "></div>
+
+    <!-- Folhas decorativas (atrás do conteúdo, à frente do fundo) -->
+    <img src="/folhas.png" alt="folhas canto superior esquerdo" class="absolute top-0 left-0 -z-10 opacity-80 pointer-events-none select-none
+             w-[30rem] -translate-x-[9rem] -translate-y-[21rem] rotate-[-15deg]" />
+    <img src="/folhas.png" alt="folhas canto inferior direito" class="absolute bottom-0 right-0 -z-10 opacity-50 pointer-events-none select-none
+             w-[32rem] translate-x-[9rem] translate-y-[23rem] rotate-[180deg]" />
+
+    <header class="relative z-10 py-3 px-4">
+      <div class="max-w-4xl mx-auto flex items-center justify-center relative">
+        <!-- Logo centralizada -->
+        <img src="/logo.png" alt="Logo"
+          class="h-28 object-contain opacity-90 drop-shadow-[0_2px_6px_rgba(0,0,0,0.5)]" />
       </div>
     </header>
-    <main class="max-w-4xl mx-auto p-4">
+
+
+    <main class="relative z-10 max-w-4xl mx-auto p-4 mt-6 rounded-lg">
       <RouterView />
     </main>
   </div>
