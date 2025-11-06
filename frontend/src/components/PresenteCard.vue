@@ -2,7 +2,7 @@
 import { formataBRL } from "../utils/moeda";
 
 const props = defineProps({
-  presente: { type: Object, required: true }, // ideal ter presente.image (url da foto)
+  presente: { type: Object, required: true }, // ideal ter presente.img (url da foto)
 });
 
 const emit = defineEmits(["contribuir"]);
@@ -18,7 +18,7 @@ const emit = defineEmits(["contribuir"]);
     <!-- imagem redonda no topo -->
     <div class="w-36 h-36 mx-auto rounded-full overflow-hidden ring-[2px] ring-offset-[2px]"
       style="--tw-ring-color: #8a9479; --tw-ring-offset-color: #f6f3ee;">
-      <img :src="presente.image || '/folhas.svg'" :alt="presente.name"
+      <img :src="presente.img || '/logo.png'" :alt="presente.name"
         class="w-full h-full object-cover transition-transform duration-500 ease-out hover:scale-[1.03] saturate-[0.9]"
         style="filter: sepia(0%) contrast(1) brightness(1.02);" />
     </div>
