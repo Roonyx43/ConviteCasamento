@@ -28,32 +28,6 @@ const emit = defineEmits(["contribuir"]);
       <h3 class="font-semibold text-lg text-emerald-950/90 leading-snug">
         {{ presente.name }}
       </h3>
-      <p class="text-[13px] mt-1 tracking-wide" style="color: #8a9479;">
-        Meta: {{ formataBRL(presente.goal_amount) }}
-      </p>
-    </div>
-
-    <!-- barra de progresso com vibe “artesanal” -->
-    <div class="w-full bg-emerald-900/5 rounded-full h-2 overflow-hidden ring-1 ring-emerald-800/10">
-      <div class="h-2 rounded-full bg-emerald-700/80"
-        :style="{ width: Math.min(100, Math.round((Number(presente.received_amount || 0) / Number(presente.goal_amount || 1)) * 100)) + '%' }">
-      </div>
-    </div>
-
-    <!-- recebido / falta -->
-    <div class="text-sm text-emerald-950/80 flex items-center justify-center gap-2">
-      <span>Recebido: <strong class="font-semibold">{{ formataBRL(presente.received_amount) }}</strong></span>
-      <span class="opacity-40">•</span>
-      <span>Falta: <strong class="font-semibold">
-          {{ formataBRL(Math.max(0, Number(presente.goal_amount) - Number(presente.received_amount || 0))) }}
-        </strong></span>
-    </div>
-
-    <!-- preço grande (estilo da sua referência) -->
-    <div class="text-center mt-1">
-      <div class="text-3xl font-bold text-emerald-900/90">
-        {{ formataBRL(presente.goal_amount) }}
-      </div>
     </div>
 
     <!-- botão -->

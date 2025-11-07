@@ -37,7 +37,6 @@ function confirmar() {
         <div>
           <label class="text-sm text-gray-600">Valor (R$)</label>
           <input v-model="valor" inputmode="decimal" class="mt-1 w-full border rounded-lg p-2" placeholder="Ex: 150,00" />
-          <p class="text-xs text-gray-500 mt-1">Use vírgula ou ponto, a gente normaliza.</p>
         </div>
       </div>
 
