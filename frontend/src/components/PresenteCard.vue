@@ -1,5 +1,4 @@
 <script setup>
-import { formataBRL } from "../utils/moeda";
 
 const props = defineProps({
   presente: { type: Object, required: true }, // ideal ter presente.img (url da foto)
@@ -30,12 +29,25 @@ const emit = defineEmits(["contribuir"]);
       </h3>
     </div>
 
+    <div class="text-center">
+      <span class="text-sm text-emerald-950/90 leading-snug">
+        {{ presente.descricao }}
+      </span>
+    </div>
+
+
     <!-- botão -->
     <button
       class="mt-2 px-4 py-2.5 rounded-lg text-white shadow-sm hover:brightness-95 active:translate-y-[1px] transition"
       style="background-color: #8a9479; ring: 1px solid rgba(0,0,0,0.15);" @click="emit('contribuir', presente)">
       Contribuir
     </button>
+
+    <div class="text-center">
+      <span class="text-sm text-emerald-950/90 leading-snug">
+        Se quiser dar uma força pros noivos, qualquer valor é bem-vindo
+      </span>
+    </div>
     
   </div>
 </template>

@@ -38,7 +38,8 @@ router.get("/", async (_req, res) => {
          img,
          goal_amount::float AS goal_amount,
          COALESCE(received_amount, 0)::float AS received_amount,
-         is_active
+         is_active,
+         descricao
        FROM gifts
        WHERE is_active = TRUE
        ORDER BY id ASC`
@@ -67,7 +68,8 @@ router.get("/:id", async (req, res) => {
          img,
          goal_amount::float AS goal_amount,
          COALESCE(received_amount, 0)::float AS received_amount,
-         is_active
+         is_active,
+         descricao
        FROM gifts
        WHERE id = $1`,
       [id]
@@ -90,6 +92,7 @@ router.post("/", async (req, res) => {
   const name = cleanText(req.body?.name);
   const goal = toNumber(req.body?.goal_amount);
   const img = cleanUrl(req.body?.img);
+  const descricao = cleanText(req.body?.descricao)
 
   if (!name || !Number.isFinite(goal) || goal <= 0) {
     return res
@@ -98,10 +101,10 @@ router.post("/", async (req, res) => {
   }
 
   const { rows } = await pool.query(
-    `INSERT INTO gifts (name, img, goal_amount, received_amount, is_active)
-       VALUES ($1, $2, $3, 0, TRUE)
-       RETURNING id, name, img, goal_amount::float AS goal_amount, received_amount::float AS received_amount, is_active`,
-    [name, img, goal]
+    `INSERT INTO gifts (name, img, goal_amount, received_amount, is_active, descricao)
+       VALUES ($1, $2, $3, 0, TRUE, $4)
+       RETURNING id, name, img, goal_amount::float AS goal_amount, received_amount::float AS received_amount, is_active, descricao`,
+    [name, img, goal, descricao]
   );
 });
 
@@ -124,7 +127,10 @@ router.put("/:id", async (req, res) => {
 
   const img = req.body?.img !== undefined ? cleanUrl(req.body.img) : undefined;
 
-  if (name === undefined && goal === undefined && img === undefined) {
+  const descricao =
+    req.body?.descricao !== undefined ? cleanText(req.body.name) : undefined;
+
+  if (name === undefined && goal === undefined && img === undefined && descricao === undefined) {
     return res.status(400).json({ error: "Nada para atualizar" });
   }
   if (goal !== undefined && (!Number.isFinite(goal) || goal <= 0)) {
@@ -148,11 +154,16 @@ router.put("/:id", async (req, res) => {
       fields.push(`goal_amount = $${idx++}`);
       values.push(goal);
     }
+    if (descricao !== undefined) {
+      fields.push (`descricao = $${idx++}`)
+      values.push(descricao)
+    }
+
     values.push(id);
 
      const { rows } = await pool.query(
       `UPDATE gifts SET ${fields.join(', ')} WHERE id = $${idx}
-       RETURNING id, name, img, goal_amount::float AS goal_amount, COALESCE(received_amount,0)::float AS received_amount, is_active`,
+       RETURNING id, name, img, goal_amount::float AS goal_amount, COALESCE(received_amount,0)::float AS received_amount, is_active, descricao`,
        values
      );
 
@@ -177,7 +188,7 @@ router.patch("/:id/desativar", async (req, res) => {
   try {
     const { rows } = await pool.query(
       `UPDATE gifts SET is_active = FALSE WHERE id = $1
-       RETURNING id, name, img, goal_amount::float AS goal_amount, COALESCE(received_amount,0)::float AS received_amount, is_active`,
+       RETURNING id, name, img, goal_amount::float AS goal_amount, COALESCE(received_amount,0)::float AS received_amount, is_active, descricao`,
       [id]
     );
     if (rows.length === 0)
@@ -201,7 +212,7 @@ router.patch("/:id/ativar", async (req, res) => {
   try {
     const { rows } = await pool.query(
       `UPDATE gifts SET is_active = TRUE WHERE id = $1
-       RETURNING id, name, img, goal_amount::float AS goal_amount, COALESCE(received_amount,0)::float AS received_amount, is_active`,
+       RETURNING id, name, img, goal_amount::float AS goal_amount, COALESCE(received_amount,0)::float AS received_amount, is_active, descricao`,
       [id]
     );
     if (rows.length === 0)
@@ -231,7 +242,7 @@ router.patch("/:id/recebido", async (req, res) => {
       `UPDATE gifts
          SET received_amount = GREATEST(0, COALESCE(received_amount,0) + $1)
        WHERE id = $2
-       RETURNING id, name, img, goal_amount::float AS goal_amount, COALESCE(received_amount,0)::float AS received_amount, is_active`,
+       RETURNING id, name, img, goal_amount::float AS goal_amount, COALESCE(received_amount,0)::float AS received_amount, is_active, descricao`,
       [delta, id]
     );
     if (rows.length === 0)
