@@ -24,13 +24,15 @@
       <div class="max-w-4xl mx-auto flex items-center flex-col justify-center relative">
         <h3 class="text-3xl texto-inicial py-3">Querido(a) convidado(a),</h3>
         <p class="texto-inicial text-2xl py-4 px-3 text-center">
-          Sua presença será o nosso maior presente! 💚
+          Sua presença será o nosso maior presente!
           Mas, se desejar nos presentear de alguma forma, deixamos abaixo algumas sugestões para o enxoval do nosso lar.
           Fique à vontade para contribuir com o valor ou item que quiser — o mais importante para nós é poder
           compartilhar esse momento especial com você!
+        </p>
+        <p class="texto-inicial text-2xl text-left">
           Com carinho,
         </p>
-        <span class=" text-3xl texto-inicial mt-3">
+        <span class=" text-4xl texto-inicial mt-3">
           Matheus e Gabriela
         </span>
       </div>
