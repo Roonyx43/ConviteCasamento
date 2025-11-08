@@ -37,17 +37,41 @@ const emit = defineEmits(["contribuir"]);
 
 
     <!-- botão -->
-    <button
-      class="mt-2 px-4 py-2.5 rounded-lg text-white shadow-sm hover:brightness-95 active:translate-y-[1px] transition"
-      style="background-color: #8a9479; ring: 1px solid rgba(0,0,0,0.15);" @click="emit('contribuir', presente)">
-      Contribuir
-    </button>
+    <!-- estado condicional -->
+<div v-if="presente.concluido === 'X'" class="mt-4 text-center">
+  <div
+    class="flex flex-col items-center justify-center gap-2 text-emerald-800"
+  >
+    <!-- ícone de check -->
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12 2.25a9.75 9.75 0 1 0 0 19.5 9.75 9.75 0 0 0 0-19.5Zm4.03 6.97a.75.75 0 0 1 0 1.06l-5.5 5.5a.75.75 0 0 1-1.06 0l-2.25-2.25a.75.75 0 0 1 1.06-1.06l1.72 1.72 4.97-4.97a.75.75 0 0 1 1.06 0Z"/>
+    </svg>
+    <p class="text-base font-medium leading-snug">
+      Este presente foi concluído
+    </p>
+    <p class="text-sm text-emerald-900/80">
+      Obrigado por fazer parte desse momento com tanto carinho!
+    </p>
+  </div>
+</div>
 
-    <div class="text-center">
-      <span class="text-sm text-emerald-950/90 leading-snug">
-        Se quiser dar uma força pros noivos, qualquer valor é bem-vindo
-      </span>
-    </div>
+<!-- quando ainda em aberto -->
+<div v-else class="flex flex-col">
+  <button
+    class="mt-2 px-4 py-2.5 rounded-lg text-white shadow-sm hover:brightness-95 active:translate-y-[1px] transition"
+    style="background-color: #8a9479; ring: 1px solid rgba(0,0,0,0.15);"
+    @click="emit('contribuir', presente)"
+  >
+    Contribuir
+  </button>
+
+  <div class="text-center mt-1">
+    <span class="text-sm text-emerald-950/90 leading-snug">
+      Se quiser dar uma força pros noivos, qualquer valor é bem-vindo
+    </span>
+  </div>
+</div>
+
     
   </div>
 </template>

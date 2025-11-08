@@ -29,23 +29,26 @@ function cleanUrl(u) {
  * GET /api/presentes
  * Lista todos os presentes ativos (valores já como number)
  */
-router.get("/", async (_req, res) => {
-  try {
-    const { rows } = await pool.query(
+ router.get("/", async (_req, res) => {
+   try {
+     const { rows } = await pool.query(
       `SELECT
-         id,
-         name,
-         img,
-         goal_amount::float AS goal_amount,
-         COALESCE(received_amount, 0)::float AS received_amount,
-         is_active,
-         descricao
-       FROM gifts
-       WHERE is_active = TRUE
-       ORDER BY id ASC`
-    );
-    res.json(rows);
-  } catch (err) {
+          id,
+          name,
+          img,
+          goal_amount::float AS goal_amount,
+          COALESCE(received_amount, 0)::float AS received_amount,
+          is_active,
+         descricao,
+         concluido
+        FROM gifts
+        WHERE is_active = TRUE
+       -- opcional: empurra concluídos pro final
+      ORDER BY (concluido = 'X') ASC, id ASC`
+     );
+     res.json(rows);
+   } catch (err) {
+
     console.error("Erro ao listar presentes:", err);
     res.status(500).json({ error: "Erro ao listar presentes" });
   }
@@ -69,7 +72,8 @@ router.get("/:id", async (req, res) => {
          goal_amount::float AS goal_amount,
          COALESCE(received_amount, 0)::float AS received_amount,
          is_active,
-         descricao
+         descricao,
+         concluido
        FROM gifts
        WHERE id = $1`,
       [id]
@@ -100,12 +104,17 @@ router.post("/", async (req, res) => {
       .json({ error: "Nome e meta válidos são obrigatórios" });
   }
 
-  const { rows } = await pool.query(
-    `INSERT INTO gifts (name, img, goal_amount, received_amount, is_active, descricao)
-       VALUES ($1, $2, $3, 0, TRUE, $4)
-       RETURNING id, name, img, goal_amount::float AS goal_amount, received_amount::float AS received_amount, is_active, descricao`,
+   const { rows } = await pool.query(
+    `INSERT INTO gifts (name, img, goal_amount, received_amount, is_active, descricao, concluido)
+       VALUES ($1, $2, $3, 0, TRUE, $4, NULL)
+       RETURNING
+         id, name, img,
+         goal_amount::float AS goal_amount,
+         COALESCE(received_amount,0)::float AS received_amount,
+         is_active, descricao, concluido`,
     [name, img, goal, descricao]
-  );
+ );
+  return res.status(201).json(rows[0]);
 });
 
 /**
@@ -115,24 +124,45 @@ router.post("/", async (req, res) => {
  */
 router.put("/:id", async (req, res) => {
   const id = Number(req.params.id);
-  if (!Number.isFinite(id))
+  if (!Number.isFinite(id)) {
     return res.status(400).json({ error: "ID inválido" });
+  }
 
+  // Campos opcionais
   const name =
     req.body?.name !== undefined ? cleanText(req.body.name) : undefined;
-  const goal =
-    req.body?.goal_amount !== undefined
-      ? toNumber(req.body.goal_amount)
-      : undefined;
 
-  const img = req.body?.img !== undefined ? cleanUrl(req.body.img) : undefined;
+  const goal =
+    req.body?.goal_amount !== undefined ? toNumber(req.body.goal_amount) : undefined;
+
+  const img =
+    req.body?.img !== undefined ? cleanUrl(req.body.img) : undefined;
 
   const descricao =
-    req.body?.descricao !== undefined ? cleanText(req.body.name) : undefined;
+    req.body?.descricao !== undefined ? cleanText(req.body.descricao) : undefined;
 
-  if (name === undefined && goal === undefined && img === undefined && descricao === undefined) {
+  // concluido: aceita "X", null ou "" (interpreta "" como null)
+  const concluido =
+    req.body?.concluido !== undefined ? req.body.concluido : undefined;
+  if (concluido !== undefined) {
+    const ok = (concluido === "X") || (concluido === null) || (concluido === "");
+    if (!ok) {
+      return res.status(400).json({ error: "concluido deve ser 'X' ou null/vazio" });
+    }
+  }
+
+  // nada pra atualizar?
+  if (
+    name === undefined &&
+    goal === undefined &&
+    img === undefined &&
+    descricao === undefined &&
+    concluido === undefined
+  ) {
     return res.status(400).json({ error: "Nada para atualizar" });
   }
+
+  // validações
   if (goal !== undefined && (!Number.isFinite(goal) || goal <= 0)) {
     return res.status(400).json({ error: "Meta inválida" });
   }
@@ -155,20 +185,36 @@ router.put("/:id", async (req, res) => {
       values.push(goal);
     }
     if (descricao !== undefined) {
-      fields.push (`descricao = $${idx++}`)
-      values.push(descricao)
+      fields.push(`descricao = $${idx++}`);
+      values.push(descricao);
+    }
+    if (concluido !== undefined) {
+      fields.push(`concluido = $${idx++}`);
+      values.push(concluido === "" ? null : concluido);
     }
 
     values.push(id);
 
-     const { rows } = await pool.query(
-      `UPDATE gifts SET ${fields.join(', ')} WHERE id = $${idx}
-       RETURNING id, name, img, goal_amount::float AS goal_amount, COALESCE(received_amount,0)::float AS received_amount, is_active, descricao`,
-       values
-     );
+    const { rows } = await pool.query(
+      `UPDATE gifts
+         SET ${fields.join(", ")}
+       WHERE id = $${idx}
+       RETURNING
+         id,
+         name,
+         img,
+         goal_amount::float AS goal_amount,
+         COALESCE(received_amount,0)::float AS received_amount,
+         is_active,
+         descricao,
+         concluido`,
+      values
+    );
 
-    if (rows.length === 0)
+    if (rows.length === 0) {
       return res.status(404).json({ error: "Presente não encontrado" });
+    }
+
     res.json(rows[0]);
   } catch (err) {
     console.error("Erro ao atualizar presente:", err);
@@ -187,8 +233,8 @@ router.patch("/:id/desativar", async (req, res) => {
 
   try {
     const { rows } = await pool.query(
-      `UPDATE gifts SET is_active = FALSE WHERE id = $1
-       RETURNING id, name, img, goal_amount::float AS goal_amount, COALESCE(received_amount,0)::float AS received_amount, is_active, descricao`,
+        `UPDATE gifts SET is_active = FALSE WHERE id = $1
+          RETURNING id, name, img, goal_amount::float AS goal_amount, COALESCE(received_amount,0)::float AS received_amount, is_active, descricao, concluido`,
       [id]
     );
     if (rows.length === 0)
@@ -212,7 +258,7 @@ router.patch("/:id/ativar", async (req, res) => {
   try {
     const { rows } = await pool.query(
       `UPDATE gifts SET is_active = TRUE WHERE id = $1
-       RETURNING id, name, img, goal_amount::float AS goal_amount, COALESCE(received_amount,0)::float AS received_amount, is_active, descricao`,
+       RETURNING id, name, img, goal_amount::float AS goal_amount, COALESCE(received_amount,0)::float AS received_amount, is_active, descricao, concluido`,
       [id]
     );
     if (rows.length === 0)
@@ -242,7 +288,7 @@ router.patch("/:id/recebido", async (req, res) => {
       `UPDATE gifts
          SET received_amount = GREATEST(0, COALESCE(received_amount,0) + $1)
        WHERE id = $2
-       RETURNING id, name, img, goal_amount::float AS goal_amount, COALESCE(received_amount,0)::float AS received_amount, is_active, descricao`,
+       RETURNING id, name, img, goal_amount::float AS goal_amount, COALESCE(received_amount,0)::float AS received_amount, is_active, descricao, concluido`,
       [delta, id]
     );
     if (rows.length === 0)
