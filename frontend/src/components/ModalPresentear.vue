@@ -177,6 +177,13 @@ function confirmarPresente() {
           </p>
         </div>
 
+        <!--Bloco 5 -->
+        <div class="flex flex-col items-center justify-center text-center bg-white/80 rounded-xl p-3 border border-emerald-900/10">
+          <p class="text-xs text-yellow-500">
+            Por favor! enviem para os noivos como será a forma de entrega!
+          </p>
+        </div>
+
         <!-- botão confirmar -->
         <button
           class="mt-1 px-4 py-2.5 rounded-lg text-white shadow-sm hover:brightness-95
