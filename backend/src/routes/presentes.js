@@ -29,26 +29,27 @@ function cleanUrl(u) {
  * GET /api/presentes
  * Lista todos os presentes ativos (valores já como number)
  */
- router.get("/", async (_req, res) => {
-   try {
-     const { rows } = await pool.query(
+router.get("/", async (_req, res) => {
+  try {
+    const { rows } = await pool.query(
       `SELECT
-          id,
-          name,
-          img,
-          goal_amount::float AS goal_amount,
-          COALESCE(received_amount, 0)::float AS received_amount,
-          is_active,
-         descricao,
-         concluido
-        FROM gifts
-        WHERE is_active = TRUE
-       -- opcional: empurra concluídos pro final
-      ORDER BY (concluido = 'X') ASC, id ASC`
-     );
-     res.json(rows);
-   } catch (err) {
+     id,
+     name,
+     img,
+     goal_amount::float AS goal_amount,
+     COALESCE(received_amount, 0)::float AS received_amount,
+     is_active,
+     descricao,
+     concluido,
+     especificacoes,
+     link_referencia AS "linkReferencia"
+   FROM gifts
+   WHERE is_active = TRUE
+   ORDER BY (concluido = 'X') ASC, id ASC`
+    );
 
+    res.json(rows);
+  } catch (err) {
     console.error("Erro ao listar presentes:", err);
     res.status(500).json({ error: "Erro ao listar presentes" });
   }
@@ -73,13 +74,17 @@ router.get("/:id", async (req, res) => {
          COALESCE(received_amount, 0)::float AS received_amount,
          is_active,
          descricao,
-         concluido
+         concluido,
+         especificacoes,
+         link_referencia AS "linkReferencia",
        FROM gifts
        WHERE id = $1`,
       [id]
     );
+
     if (rows.length === 0)
       return res.status(404).json({ error: "Presente não encontrado" });
+
     res.json(rows[0]);
   } catch (err) {
     console.error("Erro ao buscar presente:", err);
@@ -96,7 +101,7 @@ router.post("/", async (req, res) => {
   const name = cleanText(req.body?.name);
   const goal = toNumber(req.body?.goal_amount);
   const img = cleanUrl(req.body?.img);
-  const descricao = cleanText(req.body?.descricao)
+  const descricao = cleanText(req.body?.descricao);
 
   if (!name || !Number.isFinite(goal) || goal <= 0) {
     return res
@@ -104,7 +109,7 @@ router.post("/", async (req, res) => {
       .json({ error: "Nome e meta válidos são obrigatórios" });
   }
 
-   const { rows } = await pool.query(
+  const { rows } = await pool.query(
     `INSERT INTO gifts (name, img, goal_amount, received_amount, is_active, descricao, concluido)
        VALUES ($1, $2, $3, 0, TRUE, $4, NULL)
        RETURNING
@@ -113,7 +118,7 @@ router.post("/", async (req, res) => {
          COALESCE(received_amount,0)::float AS received_amount,
          is_active, descricao, concluido`,
     [name, img, goal, descricao]
- );
+  );
   return res.status(201).json(rows[0]);
 });
 
@@ -133,21 +138,26 @@ router.put("/:id", async (req, res) => {
     req.body?.name !== undefined ? cleanText(req.body.name) : undefined;
 
   const goal =
-    req.body?.goal_amount !== undefined ? toNumber(req.body.goal_amount) : undefined;
+    req.body?.goal_amount !== undefined
+      ? toNumber(req.body.goal_amount)
+      : undefined;
 
-  const img =
-    req.body?.img !== undefined ? cleanUrl(req.body.img) : undefined;
+  const img = req.body?.img !== undefined ? cleanUrl(req.body.img) : undefined;
 
   const descricao =
-    req.body?.descricao !== undefined ? cleanText(req.body.descricao) : undefined;
+    req.body?.descricao !== undefined
+      ? cleanText(req.body.descricao)
+      : undefined;
 
   // concluido: aceita "X", null ou "" (interpreta "" como null)
   const concluido =
     req.body?.concluido !== undefined ? req.body.concluido : undefined;
   if (concluido !== undefined) {
-    const ok = (concluido === "X") || (concluido === null) || (concluido === "");
+    const ok = concluido === "X" || concluido === null || concluido === "";
     if (!ok) {
-      return res.status(400).json({ error: "concluido deve ser 'X' ou null/vazio" });
+      return res
+        .status(400)
+        .json({ error: "concluido deve ser 'X' ou null/vazio" });
     }
   }
 
@@ -233,7 +243,7 @@ router.patch("/:id/desativar", async (req, res) => {
 
   try {
     const { rows } = await pool.query(
-        `UPDATE gifts SET is_active = FALSE WHERE id = $1
+      `UPDATE gifts SET is_active = FALSE WHERE id = $1
           RETURNING id, name, img, goal_amount::float AS goal_amount, COALESCE(received_amount,0)::float AS received_amount, is_active, descricao, concluido`,
       [id]
     );

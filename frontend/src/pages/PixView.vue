@@ -70,46 +70,80 @@ onBeforeUnmount(() => timer && clearInterval(timer));
 
 
 <template>
-  <div class="max-w-lg mx-auto bg-white p-4 rounded-xl shadow">
-    <h2 class="text-xl font-semibold mb-2">Pague com PIX</h2>
-    <p class="text-sm text-gray-600 mb-4">
-      Presente: <strong>{{ gift }}</strong> · Valor:
-      <strong>{{ formataBRL(amount) }}</strong>
-    </p>
+  <div class="min-h-screen flex items-center justify-center px-4">
+    <div
+      class="bg-[#f7f5f2] rounded-2xl shadow-xl w-full max-w-md p-5 relative overflow-hidden"
+    >
+      <!-- textura opcional, se quiser combinar ainda mais com os cards -->
+      <div
+        class="pointer-events-none absolute inset-0 opacity-[0.06] mix-blend-multiply"
+        style="background: url('/fundo.png') center/cover no-repeat;"
+      ></div>
 
-    <div v-if="carregando" class="text-gray-500">Gerando QR…</div>
-    <div v-else-if="erro" class="text-red-500 text-sm">{{ erro }}</div>
+      <div class="relative">
+        <!-- título -->
+        <h2 class="text-xl font-semibold mb-1 text-center text-emerald-950">
+          Pague com PIX
+        </h2>
 
-    <div v-else class="space-y-4">
-      <img
-        :src="qr"
-        alt="QR Code PIX"
-        class="mx-auto border rounded-lg w-56 h-56 object-contain"
-      />
+        <p class="text-sm text-emerald-900/80 mb-4 text-center">
+          Presente:
+          <span class="font-semibold">{{ gift }}</span>
+          · Valor:
+          <span class="font-semibold">{{ formataBRL(amount) }}</span>
+        </p>
 
-      <div>
-        <label class="text-sm text-gray-600">Copia e Cola</label>
-        <textarea
-          :value="payload"
-          readonly
-          @focus="$event.target.select()"
-          class="mt-1 w-full p-2 border rounded-lg text-xs"
-          rows="4"
-        ></textarea>
+        <!-- estados -->
+        <div v-if="carregando" class="text-emerald-900/70 text-center">
+          Gerando QR Code…
+        </div>
+
+        <div v-else-if="erro" class="text-red-600 text-sm text-center">
+          {{ erro }}
+        </div>
+
+        <div v-else class="space-y-4">
+          <!-- QR em destaque -->
+          <div
+            class="bg-white/80 border border-emerald-900/10 rounded-2xl p-4 flex flex-col items-center gap-3"
+          >
+            <img
+              :src="qr"
+              alt="QR Code PIX"
+              class="border border-emerald-900/20 rounded-xl w-56 h-56 object-contain bg-white"
+            />
+            <p class="text-xs text-emerald-900/80 text-center max-w-xs">
+              Aponte a câmera do aplicativo do seu banco para o QR Code para realizar o pagamento.
+            </p>
+          </div>
+
+          <!-- copia e cola -->
+          <div class="bg-white/80 border border-emerald-900/10 rounded-2xl p-3">
+            <label class="text-sm text-emerald-950/90">Copia e Cola</label>
+            <textarea
+              :value="payload"
+              readonly
+              @focus="$event.target.select()"
+              class="mt-1 w-full px-3 py-2 border border-emerald-900/20 rounded-lg text-xs
+                     bg-white/90 focus:outline-none focus:ring-2 focus:ring-emerald-700/40"
+              rows="4"
+            ></textarea>
+
+            <button
+              @click="copiar"
+              class="mt-3 w-full px-4 py-2.5 rounded-lg text-white shadow-sm
+                     hover:brightness-95 active:translate-y-[1px] transition text-sm"
+              style="background-color: #8a9479;"
+            >
+              Copiar código PIX
+            </button>
+          </div>
+
+          <p class="text-xs text-emerald-900/70 text-center">
+            Dica: após pagar, envie o comprovante para os noivos, se desejar 💌
+          </p>
+        </div>
       </div>
-
-      <div class="flex flex-col sm:flex-row gap-2">
-        <button
-          @click="copiar"
-          class="flex-1 px-3 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700"
-        >
-          Copiar código PIX
-        </button>
-      </div>
-
-      <p class="text-xs text-gray-500">
-        Dica: após pagar, envie o comprovante.
-      </p>
     </div>
   </div>
 </template>
